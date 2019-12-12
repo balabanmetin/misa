@@ -95,17 +95,18 @@ if __name__ == "__main__":
                 if k == core.tree.root:
                     continue
                 #if i.label and k.label and i.label == "Drosophila_pseudoobscura" and k.label == "Drosophila_sechellia":
+                #if i.label and k.label and i.label == "Drosophila_persimilis" and k.label == "Drosophila_mojavensis":
+                #if i.label and k.label and i.label == "Drosophila_persimilis" and k.label == "Drosophila_persimilis":
+
                 yield (i, k, tree, ind_key_obs, model_name, method_name)
     all_edge_pairs = prepare_edge_pairs()
-    print(all_edge_pairs)
+
 
     pool = mp.Pool(num_thread)
     results = pool.starmap(optimize_for_two, all_edge_pairs)
 
     res, b1, b2 = min(results, key=lambda x: x[0].fun)
     print("Final: ", res.fun)
-
-    import pdb; pdb.set_trace()
 
     jplace = dict()
     jplace["tree"] = extended_newick_string

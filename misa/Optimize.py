@@ -5,13 +5,21 @@ from misa.Method import FM, OLS
 
 MIN_X = 1e-5
 MAX_X = 5.0
-maxIter=500
+maxIter=1000
 
 
 
 def optimize_for_two(branch1, branch2, tree, obs_dist, model_name, method_name):
 
-    d = tree.distance_between(branch1,branch2)
+
+    dlist=[tree.distance_between(branch1,branch2)]
+    if branch1.parent!= tree.root:
+        dlist += [tree.distance_between(branch1.parent, branch2)]
+    if branch2.parent != tree.root:
+        dlist += [tree.distance_between(branch1, branch2.parent)]
+    d = max(dlist)
+
+
     mvec = [obs_dist[k] for k in sorted(obs_dist)]
     n=len(mvec)
     x0=np.array(mvec+mvec+[MIN_X,MIN_X,MIN_X,MIN_X])
@@ -62,7 +70,7 @@ def optimize_for_two(branch1, branch2, tree, obs_dist, model_name, method_name):
             return res
 
         constraint = NonlinearConstraint(cons_f, 0, 0, jac=cons_g, hess='cs')
-        pass
+
     elif model_name == "SIMPJAC":
 
         hid=np.array(mvec+mvec)
@@ -73,20 +81,25 @@ def optimize_for_two(branch1, branch2, tree, obs_dist, model_name, method_name):
 
 
         def cons_f(x):
-            x1, x2, x3, x4 = x[-4:]
             return [2*((1-x[k])**31 + (1-x[k+n])**31 - (1 - (x[k]+x[k+n]+d)/2)**31)
                     - (1-mvec[k])**31*(3-(1-d)**31) for k in range(n)]
 
         def cons_g(x):
-            x1, x2, x3, x4 = x[-4:]
             res = [[0]*(2*n+4) for k in range(n)]
             for k in range(n):
-                res[k][k]   = -2*31*(1-x[k])**30 + 31/2*(1 - (x[k]+x[k+n]+d)/2)**30
-                res[k][k+n] = -2*31*(1-x[k+n])**30 + 31/2*(1 - (x[k]+x[k+n]+d)/2)**30
+                res[k][k]   = -2*31*(1-x[k])**30 + 2*31/2*(1 - (x[k]+x[k+n]+d)/2)**30
+                res[k][k+n] = -2*31*(1-x[k+n])**30 + 2*31/2*(1 - (x[k]+x[k+n]+d)/2)**30
             return res
 
-        constraint = NonlinearConstraint(cons_f, 0, 0, jac=cons_g, hess='cs')
-        pass
+        def cons_h_v(x,v):
+            res = [[0] * (2 * n + 4) for k in range(2*n+4)]
+            for k in range(n):
+                res[k][k] = v[k] * (2*31*30*(1-x[k])**29 - 2*31/2*30/2*(1 - (x[k]+x[k+n]+d)/2)**29)
+                res[k+n][k+n] = v[k] * (2*31*30*(1-x[k+n])**29 - 2*31/2*30/2*(1 - (x[k]+x[k+n]+d)/2)**29)
+                res[k][k + n] = res[k+n][k] = v[k] * (- 2*31/2*30/2*(1 - (x[k]+x[k+n]+d)/2)**29)
+            return res
+
+        constraint = NonlinearConstraint(cons_f, 0, 0, jac=cons_g, hess=cons_h_v)
     else: #linear model
         bounds = Bounds(np.array([0]*(2*n+4)),np.array([MAX_X]*(2*n) + [branch1.edge_length, MAX_X, branch2.edge_length, MAX_X]))
 
@@ -114,5 +127,6 @@ def optimize_for_two(branch1, branch2, tree, obs_dist, model_name, method_name):
 
         result = minimize(fun=f, method="trust-constr", x0=x0, bounds=bounds, args=(branch1, branch2), constraints=[constraint],
                       options={'disp': True, 'verbose': 1, 'maxiter': maxIter} , jac=g, hessp=h_p )
+
 
     return (result, branch1, branch2)
