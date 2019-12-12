@@ -1,0 +1,44 @@
+{
+    "fields": [
+        "edge_num",
+        "likelihood",
+        "like_weight_ratio",
+        "distal_length",
+        "pendant_length"
+    ],
+    "metadata": {
+        "invocation": "/Users/metin/PycharmProjects/misa/run_misa.py -l SIMPJAC -m OLS -t droso/alldata/5/backbone.tree -d droso/alldata/5/dist.mat -o droso/alldata/5/out.jplace"
+    },
+    "placements": [
+        {
+            "n": [
+                "mix_1"
+            ],
+            "p": [
+                [
+                    4,
+                    0,
+                    1,
+                    0.05606788481173261,
+                    0.07226529446572698
+                ]
+            ]
+        },
+        {
+            "n": [
+                "mix_2"
+            ],
+            "p": [
+                [
+                    6,
+                    0,
+                    1,
+                    0.007974317889284821,
+                    0.01139008627834471
+                ]
+            ]
+        }
+    ],
+    "tree": "((((Drosophila_eugracilis:0.048551762249{0},Drosophila_biarmipes:0.052384729582{1}):0.000771746452{2},(((Drosophila_willistoni:0.088209886493{3},Drosophila_mojavensis:0.0896938{4}):0.014357006524{5},Drosophila_persimilis:0.0732511{6}):0.010980990991{7},(Drosophila_bipectinata:0.036350772582{8},Drosophila_ananassae:0.036906454014{9}):0.030991128888{10}):0.013696958656{11}):0.018572789446{12},((Drosophila_simulans:0.009019408628{13},Drosophila_sechellia:0.011829978348{14}):0.000398879152{15},Drosophila_mauritiana:0.009768744177{16}):0.021349092995{17}):0.003112152223{18},Drosophila_erecta:0.030989031814{19},Drosophila_yakuba:0.031677698049{20}){21};",
+    "version": 3
+}
