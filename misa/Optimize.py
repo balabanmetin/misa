@@ -75,8 +75,8 @@ def optimize_for_two(branch1, branch2, tree, obs_dist, model_name, method_name):
 
         hid=np.array(mvec+mvec)
         lb = 1 - (1.5)**(1/31)*(1-hid)
-
-        bounds = Bounds(np.concatenate((lb, np.array([0]*4)), axis=None),
+        lb_nonnegative = np.array([ max(i,0) for i in lb])
+        bounds = Bounds(np.concatenate((lb_nonnegative, np.array([0]*4)), axis=None),
                         np.array([MAX_X]*(2*n) + [branch1.edge_length, MAX_X, branch2.edge_length, MAX_X]))
 
 
@@ -125,8 +125,10 @@ def optimize_for_two(branch1, branch2, tree, obs_dist, model_name, method_name):
         h = OLS.h
         h_p = OLS.h_p
 
-        result = minimize(fun=f, method="trust-constr", x0=x0, bounds=bounds, args=(branch1, branch2), constraints=[constraint],
+        try:
+            result = minimize(fun=f, method="trust-constr", x0=x0, bounds=bounds, args=(branch1, branch2), constraints=[constraint],
                       options={'disp': True, 'verbose': 1, 'maxiter': maxIter} , jac=g, hessp=h_p )
-
+        except Exception as e:
+            return (None, branch1, branch2)
 
     return (result, branch1, branch2)

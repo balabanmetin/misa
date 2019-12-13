@@ -104,8 +104,9 @@ if __name__ == "__main__":
 
     pool = mp.Pool(num_thread)
     results = pool.starmap(optimize_for_two, all_edge_pairs)
+    results_no_error = list(filter(lambda x: x[0] != None, results))
 
-    res, b1, b2 = min(results, key=lambda x: x[0].fun)
+    res, b1, b2 = min(results_no_error, key=lambda x: x[0].fun)
     print("Final: ", res.fun)
 
     jplace = dict()
