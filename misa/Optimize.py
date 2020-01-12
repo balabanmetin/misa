@@ -5,7 +5,7 @@ from misa.Method import FM, OLS
 
 MIN_X = 1e-5
 MAX_X = 5.0
-maxIter=1000
+maxIter=5000
 
 
 
@@ -18,6 +18,7 @@ def optimize_for_two(branch1, branch2, tree, obs_dist, model_name, method_name):
     if branch2.parent != tree.root:
         dlist += [tree.distance_between(branch1, branch2.parent)]
     d = max(dlist)
+    d=0.0219976
 
 
     mvec = [obs_dist[k] for k in sorted(obs_dist)]
@@ -100,6 +101,27 @@ def optimize_for_two(branch1, branch2, tree, obs_dist, model_name, method_name):
             return res
 
         constraint = NonlinearConstraint(cons_f, 0, 0, jac=cons_g, hess=cons_h_v)
+
+
+        A=[[0.0] * (2 * n + 4) for i in range(3*n)]
+        ub = [0.0]*(3*n)
+        lb = [0.0]*(3*n)
+        for i in range(n):
+            A[i][i]=A[i][i+n]=1
+            lb[i]=d
+            ub[i]=MAX_X
+
+            A[i+n][i] = 1
+            A[i + n][i+n] = -1
+            lb[i+n]=-MAX_X
+            ub[i+n]=d
+
+            A[i + 2*n][i] = -1
+            A[i + 2*n][i + n] = 1
+            lb[i + 2*n] = -MAX_X
+            ub[i + 2*n] = d
+
+        constraint_triangle = LinearConstraint(A,lb=lb,ub=ub)
     else: #linear model
         bounds = Bounds(np.array([0]*(2*n+4)),np.array([MAX_X]*(2*n) + [branch1.edge_length, MAX_X, branch2.edge_length, MAX_X]))
 
@@ -117,7 +139,7 @@ def optimize_for_two(branch1, branch2, tree, obs_dist, model_name, method_name):
         h = FM.h
         h_p = FM.h_p
         result = minimize(fun=f, method="trust-constr", x0=x0, bounds=bounds, args=(branch1, branch2),
-                          constraints=[constraint],
+                          constraints=[constraint,constraint_triangle],
                           options={'disp': True, 'verbose': 1, 'maxiter': maxIter}, jac=g, hessp='3-point')
     else:
         f = OLS.f
@@ -126,7 +148,7 @@ def optimize_for_two(branch1, branch2, tree, obs_dist, model_name, method_name):
         h_p = OLS.h_p
 
         try:
-            result = minimize(fun=f, method="trust-constr", x0=x0, bounds=bounds, args=(branch1, branch2), constraints=[constraint],
+            result = minimize(fun=f, method="trust-constr", x0=x0, bounds=bounds, args=(branch1, branch2), constraints=[constraint,constraint_triangle],
                       options={'disp': True, 'verbose': 1, 'maxiter': maxIter} , jac=g, hessp=h_p )
         except Exception as e:
             return (None, branch1, branch2)

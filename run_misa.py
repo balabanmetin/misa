@@ -97,8 +97,9 @@ if __name__ == "__main__":
                 #if i.label and k.label and i.label == "Drosophila_pseudoobscura" and k.label == "Drosophila_sechellia":
                 #if i.label and k.label and i.label == "Drosophila_persimilis" and k.label == "Drosophila_mojavensis":
                 #if i.label and k.label and i.label == "Drosophila_persimilis" and k.label == "Drosophila_persimilis":
+                if i.label and k.label and i.label == "Drosophila_simulans" and k.label == "Drosophila_simulans":
 
-                yield (i, k, tree, ind_key_obs, model_name, method_name)
+                    yield (i, k, tree, ind_key_obs, model_name, method_name)
     all_edge_pairs = prepare_edge_pairs()
 
 
