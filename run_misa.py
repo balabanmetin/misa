@@ -66,7 +66,6 @@ if __name__ == "__main__":
     # each leaf has an 'id' and each node has 'edge_index'. don't confuse them
     ind_key_obs = {n.id:jc69(obs_dist[n.label]) for n in core.tree.traverse_postorder(internal=False)}
 
-
     # meta = ts.read_tree_newick("data/meta_backbone.tree")
     #
     # dm = meta.distance_matrix(leaf_labels=True)
@@ -94,20 +93,20 @@ if __name__ == "__main__":
             for k in core.tree.traverse_postorder():
                 if k == core.tree.root:
                     continue
+                if i.edge_index <= k.edge_index:
                 #if i.label and k.label and i.label == "Drosophila_pseudoobscura" and k.label == "Drosophila_sechellia":
                 #if i.label and k.label and i.label == "Drosophila_persimilis" and k.label == "Drosophila_mojavensis":
                 #if i.label and k.label and i.label == "Drosophila_persimilis" and k.label == "Drosophila_persimilis":
 
-                yield (i, k, tree, ind_key_obs, model_name, method_name)
+                    yield (i, k, tree, ind_key_obs, model_name, method_name)
     all_edge_pairs = prepare_edge_pairs()
-
 
     pool = mp.Pool(num_thread)
     results = pool.starmap(optimize_for_two, all_edge_pairs)
     results_no_error = list(filter(lambda x: x[0] != None, results))
 
     res, b1, b2 = min(results_no_error, key=lambda x: x[0].fun)
-    print("Final: ", res.fun)
+    print(res.fun)
 
     jplace = dict()
     jplace["tree"] = extended_newick_string
