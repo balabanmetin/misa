@@ -99,7 +99,8 @@ if __name__ == "__main__":
                 #if i.label and k.label and i.label == "Drosophila_persimilis" and k.label == "Drosophila_persimilis":
 
                     yield (i, k, tree, ind_key_obs, model_name, method_name)
-    all_edge_pairs = prepare_edge_pairs()
+    all_edge_pairs = list(prepare_edge_pairs())
+    print(len(all_edge_pairs))
 
     pool = mp.Pool(num_thread)
     results = pool.starmap(optimize_for_two, all_edge_pairs)

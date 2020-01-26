@@ -1,16 +1,17 @@
 
 from scipy.optimize import minimize, NonlinearConstraint, LinearConstraint, Bounds, BFGS
 import numpy as np
+import time
 from misa.Method import FM, OLS
 
 MIN_X = 1e-5
 MAX_X = 5.0
-maxIter=1000
+maxIter=5000
 
 
 
 def optimize_for_two(branch1, branch2, tree, obs_dist, model_name, method_name):
-
+    start = time.time()
 
     dlist=[tree.distance_between(branch1,branch2)]
     if branch1.parent!= tree.root:
@@ -130,5 +131,5 @@ def optimize_for_two(branch1, branch2, tree, obs_dist, model_name, method_name):
                       options={'disp': True, 'verbose': 1, 'maxiter': maxIter} , jac=g, hessp=h_p )
         except Exception as e:
             return (None, branch1, branch2)
-
+    print("Time: ", time.time()-start)
     return (result, branch1, branch2)
