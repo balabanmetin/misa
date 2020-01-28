@@ -22,6 +22,9 @@ def optimize_for_two(branch1, branch2, tree, obs_dist, model_name, method_name):
 
     mvec = [obs_dist[k] for k in sorted(obs_dist)]
     n=len(mvec)
+    obs_min = 1-(2/(3-(1-d)**31))**(1.0/31)
+    for i in range(n):
+        mvec[i]=max(mvec[i],obs_min)
     x0=np.array(mvec+mvec+[MIN_X,MIN_X,MIN_X,MIN_X])
 
     if model_name == "HAR":
