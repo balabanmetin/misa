@@ -113,8 +113,8 @@ if __name__ == "__main__":
     jplace["metadata"] = {"invocation": " ".join(sys.argv)}
     jplace["fields"] = ["edge_num", "likelihood", "like_weight_ratio", "distal_length", "pendant_length"]
     jplace["version"] = 3
-    jplace["placements"] = [{"p": [[b1.edge_index, 0, 1, res.x[-4], res.x[-3]]], "n": [query_name+"_1"]},
-                            {"p": [[b2.edge_index, 0, 1, res.x[-2], res.x[-1]]], "n": [query_name+ "_2"]}]
+    jplace["placements"] = [{"p": [[b1.edge_index, res.fun, 1, res.x[-4], res.x[-3]]], "n": [query_name+"_1"]},
+                            {"p": [[b2.edge_index, res.fun, 1, res.x[-2], res.x[-1]]], "n": [query_name+ "_2"]}]
 
 
     if output_fp:
