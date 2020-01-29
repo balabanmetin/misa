@@ -32,6 +32,9 @@ if __name__ == "__main__":
     parser.add_option("-T", "--threads", dest="num_thread", default="0",
                       help="number of cores used in placement. 0 to use all cores in the running machine",
                       metavar="NUMBER")
+    parser.add_option("-i", "--iterations", dest="num_iteration", default="5000",
+                      help="maximum number of iterations run by the optimizer",
+                      metavar="NUMBER")
 
     (options, args) = parser.parse_args()
     tree_fp = options.tree_fp
@@ -40,6 +43,7 @@ if __name__ == "__main__":
     model_name = options.model_name
     method_name = options.method_name
     num_thread = int(options.num_thread)
+    num_iterations = int(options.num_iterations)
     if not num_thread:
         num_thread = mp.cpu_count()
 
@@ -98,7 +102,7 @@ if __name__ == "__main__":
                 #if i.label and k.label and i.label == "Drosophila_persimilis" and k.label == "Drosophila_mojavensis":
                 #if i.label and k.label and i.label == "Drosophila_persimilis" and k.label == "Drosophila_persimilis":
 
-                    yield (i, k, tree, ind_key_obs, model_name, method_name)
+                    yield (i, k, tree, ind_key_obs, model_name, method_name,num_iterations)
     all_edge_pairs = prepare_edge_pairs()
 
     pool = mp.Pool(num_thread)

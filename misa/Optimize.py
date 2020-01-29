@@ -5,11 +5,10 @@ from misa.Method import FM, OLS
 
 MIN_X = 1e-5
 MAX_X = 5.0
-maxIter=5000
 
 
 
-def optimize_for_two(branch1, branch2, tree, obs_dist, model_name, method_name):
+def optimize_for_two(branch1, branch2, tree, obs_dist, model_name, method_name,maxIter):
 
 
     dlist=[tree.distance_between(branch1,branch2)]
