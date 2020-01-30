@@ -29,6 +29,8 @@ if __name__ == "__main__":
                       help="name of the weighted least squares method (OLS, FM)", metavar="METHOD")
     # parser.add_option("-p", "--protein", dest="protein_seqs", action='store_true',
     #                  help="input sequences are protein sequences")
+    parser.add_option("-j", "--jc", dest="jc_correct", action='store_true', default=False,
+                     help="choose if you want to apply Jukes-Cantor on input")
     parser.add_option("-T", "--threads", dest="num_thread", default="0",
                       help="number of cores used in placement. 0 to use all cores in the running machine",
                       metavar="NUMBER")
@@ -40,6 +42,7 @@ if __name__ == "__main__":
     model_name = options.model_name
     method_name = options.method_name
     num_thread = int(options.num_thread)
+    jc_correct = options.jc_correct
     if not num_thread:
         num_thread = mp.cpu_count()
 
@@ -64,7 +67,11 @@ if __name__ == "__main__":
 
     core = Core(tree)
     # each leaf has an 'id' and each node has 'edge_index'. don't confuse them
-    ind_key_obs = {n.id:jc69(obs_dist[n.label]) for n in core.tree.traverse_postorder(internal=False)}
+    if(jc_correct):
+        ind_key_obs = {n.id:jc69(obs_dist[n.label]) for n in core.tree.traverse_postorder(internal=False)}
+    else:
+        ind_key_obs = {n.id:obs_dist[n.label] for n in core.tree.traverse_postorder(internal=False)}
+
 
 
     # meta = ts.read_tree_newick("data/meta_backbone.tree")
@@ -100,7 +107,6 @@ if __name__ == "__main__":
 
                 yield (i, k, tree, ind_key_obs, model_name, method_name)
     all_edge_pairs = prepare_edge_pairs()
-
 
     pool = mp.Pool(num_thread)
     results = pool.starmap(optimize_for_two, all_edge_pairs)
