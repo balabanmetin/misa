@@ -73,7 +73,6 @@ if __name__ == "__main__":
         ind_key_obs = {n.id:obs_dist[n.label] for n in core.tree.traverse_postorder(internal=False)}
 
 
-
     # meta = ts.read_tree_newick("data/meta_backbone.tree")
     #
     # dm = meta.distance_matrix(leaf_labels=True)
@@ -101,11 +100,12 @@ if __name__ == "__main__":
             for k in core.tree.traverse_postorder():
                 if k == core.tree.root:
                     continue
+                if i.edge_index <= k.edge_index:
                 #if i.label and k.label and i.label == "Drosophila_pseudoobscura" and k.label == "Drosophila_sechellia":
                 #if i.label and k.label and i.label == "Drosophila_persimilis" and k.label == "Drosophila_mojavensis":
                 #if i.label and k.label and i.label == "Drosophila_persimilis" and k.label == "Drosophila_persimilis":
 
-                yield (i, k, tree, ind_key_obs, model_name, method_name)
+                    yield (i, k, tree, ind_key_obs, model_name, method_name)
     all_edge_pairs = prepare_edge_pairs()
 
     pool = mp.Pool(num_thread)
@@ -113,15 +113,15 @@ if __name__ == "__main__":
     results_no_error = list(filter(lambda x: x[0] != None, results))
 
     res, b1, b2 = min(results_no_error, key=lambda x: x[0].fun)
-    print("Final: ", res.fun)
+    print(res.fun)
 
     jplace = dict()
     jplace["tree"] = extended_newick_string
     jplace["metadata"] = {"invocation": " ".join(sys.argv)}
     jplace["fields"] = ["edge_num", "likelihood", "like_weight_ratio", "distal_length", "pendant_length"]
     jplace["version"] = 3
-    jplace["placements"] = [{"p": [[b1.edge_index, 0, 1, res.x[-4], res.x[-3]]], "n": [query_name+"_1"]},
-                            {"p": [[b2.edge_index, 0, 1, res.x[-2], res.x[-1]]], "n": [query_name+ "_2"]}]
+    jplace["placements"] = [{"p": [[b1.edge_index, res.fun, 1, res.x[-4], res.x[-3]]], "n": [query_name+"_1"]},
+                            {"p": [[b2.edge_index, res.fun, 1, res.x[-2], res.x[-1]]], "n": [query_name+ "_2"]}]
 
 
     if output_fp:

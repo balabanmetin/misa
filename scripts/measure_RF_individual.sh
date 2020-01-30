@@ -4,15 +4,13 @@
 # $2 things.txt
 # $3 true.tree
 
-tre=`paste -s -d ' ' $2 | xargs nw_prune $1` 
-
 s1=`head -n 1 $2`
 s2=`tail -n +2 $2`
 
-t1=`echo $tre | sed "s/mix_1/$s1/g" `
-t2=`echo $tre | sed "s/mix_2/$s2/g" `
-t3=`echo $tre | sed "s/mix_1/$s2/g" `
-t4=`echo $tre | sed "s/mix_2/$s1/g" `
+t1=`cat $1 | sed "s/mix_1/$s1/g" `
+t2=`cat $1 | sed "s/mix_2/$s2/g" `
+t3=`cat $1 | sed "s/mix_1/$s2/g" `
+t4=`cat $1 | sed "s/mix_2/$s1/g" `
 
 v1=`compareTrees.missingBranch $3 <(echo $t1) -simplify | cut -f2 -d' '`
 v2=`compareTrees.missingBranch $3 <(echo $t2) -simplify | cut -f2 -d' '`

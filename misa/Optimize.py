@@ -5,7 +5,7 @@ from misa.Method import FM, OLS
 
 MIN_X = 1e-5
 MAX_X = 5.0
-maxIter=1000
+maxIter=5000
 
 
 
