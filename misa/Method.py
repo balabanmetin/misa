@@ -78,7 +78,7 @@ class OLS(Method):
 
         n = int((len(x) - 4) / 2)
         H = np.diag([4] * len(x), 0)
-        H[0:2*n, -1] = H[0:2*n, -3] = H[-3, 0:2*n] = H[-1, 0:2*n] = -4
+        H[0:n, -1] = H[n:2*n, -3] = H[-3, n:2*n] = H[-1, 0:n] = -4
 
         return H
 
