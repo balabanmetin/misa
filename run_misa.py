@@ -32,7 +32,7 @@ if __name__ == "__main__":
     parser.add_option("-T", "--threads", dest="num_thread", default="0",
                       help="number of cores used in placement. 0 to use all cores in the running machine",
                       metavar="NUMBER")
-    parser.add_option("-i", "--iterations", dest="num_iteration", default="5000",
+    parser.add_option("-i", "--iterations", dest="num_iterations", default="5000",
                       help="maximum number of iterations run by the optimizer",
                       metavar="NUMBER")
 

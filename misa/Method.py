@@ -84,11 +84,13 @@ class OLS(Method):
 
     @staticmethod
     def h_p(x, p, *args):
+        n = int((len(x) - 4) / 2)
         res = np.zeros_like(x)
-        res[0:-4]= 4*p[0:-4] - 4*p[-3]-4*p[-1]
-        res[-4:] = 4*p[-4:]
-        res[-3] += -4*np.sum(p[0:-4])
-        res[-1] += -4*np.sum(p[0:-4])
+        res[0:n]  = 4*p[0:n]   - 4*p[-1]
+        res[n:2*n]= 4*p[n:2*n] - 4*p[-3]
+        res[-4:]  = 4*p[-4:]
+        res[-3] += -4*np.sum(p[n:2*n])
+        res[-1] += -4*np.sum(p[0:n])
         return res
 
 class FM(Method):
