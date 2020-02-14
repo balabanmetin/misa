@@ -95,7 +95,7 @@ class OLS(Method):
         for k, v in branch2.Sd.items():
             H[k+n][-2] = H[-2][k+n] = -2
 
-        H[0:n, -1] = H[n:2*n, -3] = H[-3, n:2*n] = H[-1, 0:n] = -2
+        H[0:n, -3] = H[n:2*n, -1] = H[-1, n:2*n] = H[-3, 0:n] = -2
 
         return H
 
