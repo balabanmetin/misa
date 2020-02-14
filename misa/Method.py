@@ -75,10 +75,27 @@ class OLS(Method):
 
     @staticmethod
     def h(x, *args):
-
+        branch1 = args[0]
+        branch2 = args[1]
         n = int((len(x) - 4) / 2)
-        H = np.diag([4] * len(x), 0)
-        H[0:n, -1] = H[n:2*n, -3] = H[-3, n:2*n] = H[-1, 0:n] = -4
+        H = np.diag([2] * len(x), 0)
+        H[-4][-4] = H[-3][-3] = H[-2][-2] = H[-1][-1]= 2 * n
+        H[-4][-3] = H[-3][-4] = -len(branch1.Rd)*2 + len(branch1.Sd)*2
+        H[-1][-2] = H[-2][-1] = -len(branch2.Rd)*2 + len(branch2.Sd)*2
+
+        for k, v in branch1.Rd.items():
+            H[k][-4] = H[-4][k] = 2
+
+        for k, v in branch1.Sd.items():
+            H[k][-4] = H[-4][k] = -2
+
+        for k, v in branch2.Rd.items():
+            H[k][-2] = H[-2][k] = 2
+
+        for k, v in branch2.Sd.items():
+            H[k][-2] = H[-2][k] = -2
+
+        H[0:n, -1] = H[n:2*n, -3] = H[-3, n:2*n] = H[-1, 0:n] = -2
 
         return H
 
