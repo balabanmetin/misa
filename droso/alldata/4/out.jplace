@@ -7,7 +7,7 @@
         "pendant_length"
     ],
     "metadata": {
-        "invocation": "/Users/metin/PycharmProjects/misa/run_misa.py -l SIMPJAC -m OLS -t droso/alldata/4/backbone.tree -d droso/alldata/4/dist.mat -o droso/alldata/4/out.jplace"
+        "invocation": "/Users/metin/PycharmProjects/misa/run_misa.py -l SIMPJAC -m OLS -t droso/alldata/4/backbone.tree -d droso/alldata/4/dist.mat -o droso/alldata/4/out.jplace -m OLS -i 1000 -l SIMPJAC -T 4"
     },
     "placements": [
         {
@@ -17,10 +17,10 @@
             "p": [
                 [
                     12,
-                    0,
+                    3.711257231254704e-05,
                     1,
-                    0.0322323622117286,
-                    0.04271048395654397
+                    0.027474368211512563,
+                    0.047661480733302446
                 ]
             ]
         },
@@ -31,10 +31,10 @@
             "p": [
                 [
                     21,
-                    0,
+                    3.711257231254704e-05,
                     1,
-                    0.02779118625022629,
-                    0.0355335928651213
+                    0.030421884883613574,
+                    0.034184737588861196
                 ]
             ]
         }
