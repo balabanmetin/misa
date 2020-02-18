@@ -111,6 +111,7 @@ if __name__ == "__main__":
 
     res, b1, b2 = min(results_no_error, key=lambda x: x[0].fun)
     print(res.fun)
+    #print(res.x)
 
     jplace = dict()
     jplace["tree"] = extended_newick_string

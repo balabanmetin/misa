@@ -3,8 +3,8 @@ from scipy.optimize import minimize, NonlinearConstraint, LinearConstraint, Boun
 import numpy as np
 from misa.Method import FM, OLS
 
-MIN_X = 1e-5
-MAX_X = 5.0
+MIN_X = 0
+MAX_X = 0.67
 
 
 
@@ -18,13 +18,20 @@ def optimize_for_two(branch1, branch2, tree, obs_dist, model_name, method_name,m
         dlist += [tree.distance_between(branch1, branch2.parent)]
     d = max(dlist)
 
-
     mvec = [obs_dist[k] for k in sorted(obs_dist)]
     n=len(mvec)
     obs_min = 1-(2/(3-(1-d)**31))**(1.0/31)
     for i in range(n):
-        mvec[i]=max(mvec[i],obs_min)
+        mvec[i]=max(mvec[i],obs_min+0.001)
     x0=np.array(mvec+mvec+[MIN_X,MIN_X,MIN_X,MIN_X])
+    for k, v in branch1.Rd.items():
+        x0[k] = v + branch1.edge_length
+    for k, v in branch1.Sd.items():
+        x0[k] = v
+    for k, v in branch2.Rd.items():
+        x0[k + n] = v + branch2.edge_length
+    for k, v in branch2.Sd.items():
+        x0[k + n] = v
 
     if model_name == "HAR":
         # harmonic as y approaches to infinity , harmonic mean of x and y is 2*x, thus the lower bound
@@ -132,5 +139,5 @@ def optimize_for_two(branch1, branch2, tree, obs_dist, model_name, method_name,m
                       options={'disp': True, 'verbose': 1, 'maxiter': maxIter} , jac=g, hess=h )
         except Exception as e:
             return (None, branch1, branch2)
-
+    #print(result.fun , branch1.edge_index, branch2.edge_index)
     return (result, branch1, branch2)
