@@ -3,13 +3,12 @@ from scipy.optimize import minimize, NonlinearConstraint, LinearConstraint, Boun
 import numpy as np
 from misa.Method import FM, OLS
 
-MIN_X = 1e-5
-MAX_X = 5.0
-maxIter=5000
+MIN_X = 0
+MAX_X = 0.67
 
 
 
-def optimize_for_two(branch1, branch2, tree, obs_dist, model_name, method_name):
+def optimize_for_two(branch1, branch2, tree, obs_dist, model_name, method_name,maxIter):
 
 
     dlist=[tree.distance_between(branch1,branch2)]
@@ -19,10 +18,52 @@ def optimize_for_two(branch1, branch2, tree, obs_dist, model_name, method_name):
         dlist += [tree.distance_between(branch1, branch2.parent)]
     d = max(dlist)
 
-
     mvec = [obs_dist[k] for k in sorted(obs_dist)]
     n=len(mvec)
-    x0=np.array(mvec+mvec+[MIN_X,MIN_X,MIN_X,MIN_X])
+    obs_min = 1-(2/(3-(1-d)**31))**(1.0/31)
+    for i in range(n):
+        mvec[i]=max(mvec[i],obs_min+0.001)
+
+    def init_zero_obj():
+        x0=np.array(mvec+mvec+[MIN_X,MIN_X,MIN_X,MIN_X])
+        for k, v in branch1.Rd.items():
+            x0[k] = v + branch1.edge_length
+        for k, v in branch1.Sd.items():
+            x0[k] = v
+        for k, v in branch2.Rd.items():
+            x0[k + n] = v + branch2.edge_length
+        for k, v in branch2.Sd.items():
+            x0[k + n] = v
+            return x0
+
+    def init_zero_constr_viol():
+        nmvec = 1- (1-np.array(mvec))*((3-(1-d)**31)/2)**(1/31)
+        hypo1=[0]*n
+        hypo2=[0]*n
+        res = [0]*(2*n+4)
+        for k, v in branch1.Rd.items():
+            hypo1[k] = v + branch1.edge_length
+        for k, v in branch1.Sd.items():
+            hypo1[k] = v
+        for k, v in branch2.Rd.items():
+            hypo2[k] = v + branch2.edge_length
+        for k, v in branch2.Sd.items():
+            hypo2[k] = v
+        for i in range(n):
+            if hypo1[i] <= hypo2[i]:
+                res[i] = nmvec[i]
+                res[i+n] = nmvec[i]+d
+            else:
+                res[i+n] = nmvec[i]
+                res[i] = nmvec[i] + d
+        return res
+
+    def init_lazy():
+        return np.array(mvec+mvec+[MIN_X,MIN_X,MIN_X,MIN_X])
+
+    #x0=init_zero_obj()
+    x0=init_zero_constr_viol()
+    #x0=init_lazy()
 
     if model_name == "HAR":
         # harmonic as y approaches to infinity , harmonic mean of x and y is 2*x, thus the lower bound
@@ -127,8 +168,8 @@ def optimize_for_two(branch1, branch2, tree, obs_dist, model_name, method_name):
 
         try:
             result = minimize(fun=f, method="trust-constr", x0=x0, bounds=bounds, args=(branch1, branch2), constraints=[constraint],
-                      options={'disp': True, 'verbose': 1, 'maxiter': maxIter} , jac=g, hessp=h_p )
+                      options={'disp': True, 'verbose': 1, 'maxiter': maxIter} , jac=g, hess=h )
         except Exception as e:
             return (None, branch1, branch2)
-
+    #print(result.fun , branch1.edge_index, branch2.edge_index)
     return (result, branch1, branch2)
