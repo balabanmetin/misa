@@ -5,6 +5,7 @@ from optparse import OptionParser
 
 import treeswift as ts
 from misa.util import index_edges
+from misa.estimate_d3 import estimate_d3
 
 from misa.Core import Core
 from misa.Optimize import optimize_for_two
@@ -29,15 +30,15 @@ if __name__ == "__main__":
                       help="name of the weighted least squares method (OLS, FM)", metavar="METHOD")
     # parser.add_option("-p", "--protein", dest="protein_seqs", action='store_true',
     #                  help="input sequences are protein sequences")
-    parser.add_option("-j", "--jc", dest="jc_correct", action='store_true', default=False,
-                     help="choose if you want to apply Jukes-Cantor on input")
     parser.add_option("-T", "--threads", dest="num_thread", default="0",
                       help="number of cores used in placement. 0 to use all cores in the running machine",
                       metavar="NUMBER")
     parser.add_option("-i", "--iterations", dest="num_iterations", default="5000",
                       help="maximum number of iterations run by the optimizer",
                       metavar="NUMBER")
-
+    parser.add_option("-k", "--kmer", dest="kmer_size", default="31",
+                      help="size of the kmers",
+                      metavar="NUMBER")
     (options, args) = parser.parse_args()
     tree_fp = options.tree_fp
     dist_fp = options.dist_fp
@@ -45,12 +46,14 @@ if __name__ == "__main__":
     model_name = options.model_name
     method_name = options.method_name
     num_thread = int(options.num_thread)
-    jc_correct = options.jc_correct
+    kmer_size = int(options.kmer_size)
     num_iterations = int(options.num_iterations)
     if not num_thread:
         num_thread = mp.cpu_count()
 
     tree = ts.read_tree_newick(tree_fp) # "data/backbone.tree")
+
+    #estimate_d3(tree)
     index_edges(tree)
     extended_newick_string = extended_newick(tree)
 
@@ -71,21 +74,33 @@ if __name__ == "__main__":
 
     core = Core(tree)
     # each leaf has an 'id' and each node has 'edge_index'. don't confuse them
-    if(jc_correct):
-        ind_key_obs = {n.id:jc69(obs_dist[n.label]) for n in core.tree.traverse_postorder(internal=False)}
-    else:
-        ind_key_obs = {n.id:obs_dist[n.label] for n in core.tree.traverse_postorder(internal=False)}
+    ind_key_obs = {n.id:(2*obs_dist[n.label])/(obs_dist[n.label]+1) for n in core.tree.traverse_postorder(internal=False)}
 
 
-    # meta = ts.read_tree_newick("data/meta_backbone.tree")
-    #
+    from misa.Method import OLS
+    import math
+    meta = ts.read_tree_newick("yeast/VIN7/meta_backbone.tree")
+
     # dm = meta.distance_matrix(leaf_labels=True)
     #
-    # s1 = "Drosophila_persimilis"
-    # s2 = "Drosophila_simulans"
+    # s1 = "Saccharomyces_cerevisiae"
+    # s2 = "Saccharomyces_kudriavzevii"
     #
     # a_vec = {n.id:dm[s1][n.label] for n in core.tree.traverse_postorder(internal=False)}
     # b_vec = {n.id:dm[s2][n.label] for n in core.tree.traverse_postorder(internal=False)}
+    #
+    # print(a_vec)
+    # print(b_vec)
+    # x_test=[0]*(2*len(a_vec)+4)
+    # for i in range(len(a_vec)):
+    #     x_test[i]= math.exp(-kmer_size*a_vec[i])
+    #     x_test[i+len(a_vec)]=math.exp(-kmer_size*b_vec[i])
+    # x_test[-4]=0.05117223
+    # x_test[-3]=0.05683918
+    # x_test[-2]=0.01680891
+    # x_test[-1]=0.07946303
+
+    #print(x_test)
 
     # orig_err = 0
     # for k in range(12):
@@ -95,21 +110,32 @@ if __name__ == "__main__":
     #
     # print("ORIG ERR: ", orig_err)
 
-
+    alpha=0.50
 
     def prepare_edge_pairs():
         for i in core.tree.traverse_postorder():
             if i == core.tree.root:
                 continue
-            for k in core.tree.traverse_postorder():
-                if k == core.tree.root:
+            for j in core.tree.traverse_postorder():
+                if j == core.tree.root:
                     continue
-                if i.edge_index <= k.edge_index:
+                if i.edge_index in [0] and  j.edge_index in [4,7]:
                 #if i.label and k.label and i.label == "Drosophila_pseudoobscura" and k.label == "Drosophila_sechellia":
                 #if i.label and k.label and i.label == "Drosophila_persimilis" and k.label == "Drosophila_mojavensis":
                 #if i.label and k.label and i.label == "Drosophila_persimilis" and k.label == "Drosophila_persimilis":
-
-                    yield (i, k, tree, ind_key_obs, model_name, method_name,num_iterations)
+                    #dlist = [tree.distance_between(i, j)]
+                    # if i.parent != tree.root:
+                    #     dlist += [tree.distance_between(i.parent, j)]
+                    # if j.parent != tree.root:
+                    #     dlist += [tree.distance_between(i, j.parent)]
+                    # d = max(dlist)
+                    #
+                    # mvec = [ind_key_obs[k] for k in sorted(ind_key_obs)]
+                    # tup=(i, j, alpha, kmer_size, d, mvec)
+                    # print(tup)
+                    # print(OLS.f(x_test,*tup))
+                    #exit(1)
+                    yield (i, j, tree, ind_key_obs, model_name, method_name,num_iterations,kmer_size, alpha)
     all_edge_pairs = prepare_edge_pairs()
 
     pool = mp.Pool(num_thread)

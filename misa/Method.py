@@ -1,6 +1,7 @@
 
 from abc import ABC ,abstractmethod
 import numpy as np
+import math
 
 # Glossary
 # OLS: Ordinary Least Squares
@@ -28,18 +29,38 @@ class OLS(Method):
     def f(x, *args):
         branch1 = args[0]
         branch2 = args[1]
+        alpha = args[2]
+        k = args[3]
+        d3hat= args[4]
+        d3hat= 0.172612
+        convec = args[5]
+        xABhat = math.exp(-k*d3hat)
         x1, x2, x3, x4 = x[-4:]
         acc = 0
         n = int((len(x) - 4) / 2)
-        for k, v in branch1.Rd.items():
-            acc += (x[k] - (v + branch1.edge_length - x1 + x2)) ** 2
-        for k, v in branch1.Sd.items():
-            acc += (x[k] - (v + x1 + x2)) ** 2
 
-        for k, v in branch2.Rd.items():
-            acc += (x[k + n] - (v + branch2.edge_length - x3 + x4)) ** 2
-        for k, v in branch2.Sd.items():
-            acc += (x[k + n] - (v + x3 + x4)) ** 2
+        try:
+
+            for key, v in branch1.Rd.items():
+                acc += alpha/2*((-1/k*math.log(x[key]) - (v + branch1.edge_length - x1 + x2)) ** 2)
+
+            for key, v in branch1.Sd.items():
+                acc += alpha/2*(-1/k*math.log(x[key]) - (v + x1 + x2)) ** 2
+
+            for key, v in branch2.Rd.items():
+                acc += alpha/2*((-1/k*math.log(x[key+n]) - (v + branch2.edge_length - x3 + x4)) ** 2)
+
+            for key, v in branch2.Sd.items():
+                acc += alpha/2*((-1/k*math.log(x[key+n]) - (v + x3 + x4)) ** 2)
+
+            for key, v in branch1.Rd.items():
+                acc += (1-alpha)/(3-xABhat)**2*((2*x[key]+2*x[key+n]-2*math.sqrt(x[key]*x[key+n]*xABhat)-(3-xABhat)*convec[key])**2)
+                #print((1-alpha)/(3-xABhat)**2*((2*x[key]+2*x[key+n]-2*math.sqrt(x[key]*x[key+n]*xABhat)-(3-xABhat)*convec[key])**1))
+            for key, v in branch1.Sd.items():
+                acc += (1-alpha)/(3-xABhat)**2*((2*x[key]+2*x[key+n]-2*math.sqrt(x[key]*x[key+n]*xABhat)-(3-xABhat)*convec[key])**2)
+                #print((1-alpha)/(3-xABhat)**2*((2*x[key]+2*x[key+n]-2*math.sqrt(x[key]*x[key+n]*xABhat)-(3-xABhat)*convec[key])**1))
+        except:
+            return 100
 
         return acc
 
@@ -47,67 +68,80 @@ class OLS(Method):
     def g(x, *args):
         branch1 = args[0]
         branch2 = args[1]
+        alpha = args[2]
+        k = args[3]
+        d3hat= args[4]
+        convec = args[5]
+        xABhat = math.exp(-k*d3hat)
         x1, x2, x3, x4 = x[-4:]
-        res = len(x) * [0]
         n = int((len(x) - 4) / 2)
+        res = len(x) * [0]
 
-        for k, v in branch1.Rd.items():
-            res[k] += 2 * (x[k] - (v + branch1.edge_length - x1 + x2))
-            res[-4] += 2 * (x[k] - (v + branch1.edge_length - x1 + x2))
-            res[-3] += - 2 * (x[k] - (v + branch1.edge_length - x1 + x2))
+        for key, v in branch1.Rd.items():
+            res[key] += 2 * alpha/2*(-1/k*math.log(x[key]) - (v + branch1.edge_length - x1 + x2))*(-1)/k/x[key]
+            res[-4] += 2 * (-1/k*math.log(x[key]) - (v + branch1.edge_length - x1 + x2))
+            res[-3] += - 2 * (-1/k*math.log(x[key]) - (v + branch1.edge_length - x1 + x2))
 
-        for k, v in branch1.Sd.items():
-            res[k] += 2 * (x[k] - (v + x1 + x2))
-            res[-4] += - 2 * (x[k] - (v + x1 + x2))
-            res[-3] += - 2 * (x[k] - (v + x1 + x2))
+        for key, v in branch1.Sd.items():
+            res[key] += 2 * alpha/2*(-1/k*math.log(x[key]) - (v + x1 + x2))*(-1)/k/x[key]
+            res[-4] += - 2 * (-1/k*math.log(x[key]) - (v + x1 + x2))
+            res[-3] += - 2 * (-1/k*math.log(x[key]) - (v + x1 + x2))
 
-        for k, v in branch2.Rd.items():
-            res[k + n] += 2 * (x[k + n] - (v + branch2.edge_length - x3 + x4))
-            res[-2] += 2 * (x[k + n] - (v + branch2.edge_length - x3 + x4))
-            res[-1] += - 2 * (x[k + n] - (v + branch2.edge_length - x3 + x4))
+        for key, v in branch2.Rd.items():
+            res[key + n] += 2 * alpha/2*(-1/k*math.log(x[key+n]) - (v + branch2.edge_length - x3 + x4))*(-1)/k/x[key+n]
+            res[-2] += 2 * (-1/k*math.log(x[key+n]) - (v + branch2.edge_length - x3 + x4))
+            res[-1] += - 2 * (-1/k*math.log(x[key+n]) - (v + branch2.edge_length - x3 + x4))
 
-        for k, v in branch2.Sd.items():
-            res[k + n] += 2 * (x[k + n] - (v + x3 + x4))
-            res[-2] += - 2 * (x[k + n] - (v + x3 + x4))
-            res[-1] += - 2 * (x[k + n] - (v + x3 + x4))
+        for key, v in branch2.Sd.items():
+            res[key + n] += 2 * alpha/2*(-1/k*math.log(x[key+n]) - (v + x3 + x4))*(-1)/k/x[key+n]
+            res[-2] += - 2 * (-1/k*math.log(x[key+n]) - (v + x3 + x4))
+            res[-1] += - 2 * (-1/k*math.log(x[key+n]) - (v + x3 + x4))
+
+        for key, v in branch1.Rd.items():
+            res[key] += 2*(1-alpha)/(3-xABhat)**2*(2*x[key]+2*x[key+n]-2*math.sqrt(x[key]*x[key+n]*xABhat)-(3-xABhat)*convec[key])*(2-x[key+n]*xABhat/math.sqrt(x[key]*x[key+n]*xABhat))
+            res[key+n] += 2*(1-alpha)/(3-xABhat)**2*(2*x[key]+2*x[key+n]-2*math.sqrt(x[key]*x[key+n]*xABhat)-(3-xABhat)*convec[key])*(2-x[key]*xABhat/math.sqrt(x[key]*x[key+n]*xABhat))
+
+        for key, v in branch1.Sd.items():
+            res[key] += 2*(1-alpha)/(3-xABhat)**2*(2*x[key]+2*x[key+n]-2*math.sqrt(x[key]*x[key+n]*xABhat)-(3-xABhat)*convec[key])*(2-x[key+n]*xABhat/math.sqrt(x[key]*x[key+n]*xABhat))
+            res[key+n] += 2*(1-alpha)/(3-xABhat)**2*(2*x[key]+2*x[key+n]-2*math.sqrt(x[key]*x[key+n]*xABhat)-(3-xABhat)*convec[key])*(2-x[key]*xABhat/math.sqrt(x[key]*x[key+n]*xABhat))
 
         return res
 
     @staticmethod
     def h(x, *args):
-        branch1 = args[0]
-        branch2 = args[1]
-        n = int((len(x) - 4) / 2)
+        # branch1 = args[0]
+        # branch2 = args[1]
+        # n = int((len(x) - 4) / 2)
         H = np.diag([2] * len(x), 0)
-        H[-4][-4] = H[-3][-3] = H[-2][-2] = H[-1][-1]= 2 * n
-        H[-4][-3] = H[-3][-4] = -len(branch1.Rd)*2 + len(branch1.Sd)*2
-        H[-1][-2] = H[-2][-1] = -len(branch2.Rd)*2 + len(branch2.Sd)*2
-
-        for k, v in branch1.Rd.items():
-            H[k][-4] = H[-4][k] = 2
-
-        for k, v in branch1.Sd.items():
-            H[k][-4] = H[-4][k] = -2
-
-        for k, v in branch2.Rd.items():
-            H[k+n][-2] = H[-2][k+n] = 2
-
-        for k, v in branch2.Sd.items():
-            H[k+n][-2] = H[-2][k+n] = -2
-
-        H[0:n, -3] = H[n:2*n, -1] = H[-1, n:2*n] = H[-3, 0:n] = -2
+        # H[-4][-4] = H[-3][-3] = H[-2][-2] = H[-1][-1]= 2 * n
+        # H[-4][-3] = H[-3][-4] = -len(branch1.Rd)*2 + len(branch1.Sd)*2
+        # H[-1][-2] = H[-2][-1] = -len(branch2.Rd)*2 + len(branch2.Sd)*2
+        #
+        # for k, v in branch1.Rd.items():
+        #     H[k][-4] = H[-4][k] = 2
+        #
+        # for k, v in branch1.Sd.items():
+        #     H[k][-4] = H[-4][k] = -2
+        #
+        # for k, v in branch2.Rd.items():
+        #     H[k+n][-2] = H[-2][k+n] = 2
+        #
+        # for k, v in branch2.Sd.items():
+        #     H[k+n][-2] = H[-2][k+n] = -2
+        #
+        # H[0:n, -3] = H[n:2*n, -1] = H[-1, n:2*n] = H[-3, 0:n] = -2
 
         return H
 
     @staticmethod
     def h_p(x, p, *args):
-        n = int((len(x) - 4) / 2)
+        # n = int((len(x) - 4) / 2)
         res = np.zeros_like(x)
-        res[0:n]  = 4*p[0:n]   - 4*p[-1]
-        res[n:2*n]= 4*p[n:2*n] - 4*p[-3]
-        res[-4:]  = 4*p[-4:]
-        res[-3] += -4*np.sum(p[n:2*n])
-        res[-1] += -4*np.sum(p[0:n])
+        # res[0:n]  = 4*p[0:n]   - 4*p[-1]
+        # res[n:2*n]= 4*p[n:2*n] - 4*p[-3]
+        # res[-4:]  = 4*p[-4:]
+        # res[-3] += -4*np.sum(p[n:2*n])
+        # res[-1] += -4*np.sum(p[0:n])
         return res
 
 class FM(Method):

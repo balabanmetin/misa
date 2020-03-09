@@ -2,13 +2,14 @@
 from scipy.optimize import minimize, NonlinearConstraint, LinearConstraint, Bounds, BFGS
 import numpy as np
 from misa.Method import FM, OLS
+import math
 
 MIN_X = 0
 MAX_X = 0.67
 
 
 
-def optimize_for_two(branch1, branch2, tree, obs_dist, model_name, method_name,maxIter):
+def optimize_for_two(branch1, branch2, tree, obs_containment, model_name, method_name, maxIter, k, alpha):
 
 
     dlist=[tree.distance_between(branch1,branch2)]
@@ -18,11 +19,8 @@ def optimize_for_two(branch1, branch2, tree, obs_dist, model_name, method_name,m
         dlist += [tree.distance_between(branch1, branch2.parent)]
     d = max(dlist)
 
-    mvec = [obs_dist[k] for k in sorted(obs_dist)]
+    mvec = [obs_containment[k] for k in sorted(obs_containment)]
     n=len(mvec)
-    obs_min = 1-(2/(3-(1-d)**31))**(1.0/31)
-    for i in range(n):
-        mvec[i]=max(mvec[i],obs_min+0.001)
 
     def init_zero_obj():
         x0=np.array(mvec+mvec+[MIN_X,MIN_X,MIN_X,MIN_X])
@@ -40,7 +38,7 @@ def optimize_for_two(branch1, branch2, tree, obs_dist, model_name, method_name,m
         nmvec = 1- (1-np.array(mvec))*((3-(1-d)**31)/2)**(1/31)
         hypo1=[0]*n
         hypo2=[0]*n
-        res = [0]*(2*n+4)
+        res = np.array([0]*(2*n+4))
         for k, v in branch1.Rd.items():
             hypo1[k] = v + branch1.edge_length
         for k, v in branch1.Sd.items():
@@ -62,94 +60,14 @@ def optimize_for_two(branch1, branch2, tree, obs_dist, model_name, method_name,m
         return np.array(mvec+mvec+[MIN_X,MIN_X,MIN_X,MIN_X])
 
     #x0=init_zero_obj()
-    x0=init_zero_constr_viol()
-    #x0=init_lazy()
-
-    if model_name == "HAR":
-        # harmonic as y approaches to infinity , harmonic mean of x and y is 2*x, thus the lower bound
-        bounds = Bounds(np.array(mvec+mvec+[0,0,0,0])/2,
-                        np.array([MAX_X]*(2*n) + [branch1.edge_length, MAX_X, branch2.edge_length, MAX_X]))
+    #x0=init_zero_constr_viol()
+    x0=init_lazy()
 
 
-        def cons_f(x):
-            return [2*x[k]*x[n+k] -mvec[k]*x[k] - mvec[k]*x[k+n] for k in range(n)]
-
-        def cons_g(x):
-            res = [[0]*(2*n+4) for k in range(n)]
-            for k in range(n):
-                res[k][k] = 2*x[n+k] - mvec[k]
-                res[k][k+n] = 2*x[k] - mvec[k]
-            return res
-
-        constraint = NonlinearConstraint(cons_f, 0, 0, jac=cons_g, hess='3-point')
-
-    elif model_name == "JAC":
-
-        hid=np.array(mvec+mvec)
-        lb = 1 - (1.5)**(1/31)*(1-hid)
-
-        bounds = Bounds(np.concatenate((lb, np.array([0]*4)), axis=None),
-                        np.array([MAX_X]*(2*n) + [branch1.edge_length, MAX_X, branch2.edge_length, MAX_X]))
-
-
-        def cons_f(x):
-            x1, x2, x3, x4 = x[-4:]
-            return [2*((1-x[k])**31 + (1-x[k+n])**31 - (1 - (x[k]+x[k+n]+d-x1-x3+x2+x4)/2)**31)
-                    - (1-mvec[k])**31*(3-(1-(d-x1-x3+x2+x4))**31) for k in range(n)]
-
-        def cons_g(x):
-            x1, x2, x3, x4 = x[-4:]
-            res = [[0]*(2*n+4) for k in range(n)]
-            for k in range(n):
-                res[k][k]   = -2*31*(1-x[k])**30 + 31/2*(1 - (x[k]+x[k+n]+d-x1-x3+x2+x4)/2)**30
-                res[k][k+n] = -2*31*(1-x[k+n])**30 + 31/2*(1 - (x[k]+x[k+n]+d-x1-x3+x2+x4)/2)**30
-                temp = - 31/2*(1 - (x[k]+x[k+n]+d-x1-x3+x2+x4)/2)**30 + 31*(1-mvec[k])**31*(1-(d-x1-x3+x2+x4))**30
-                res[k][-4] = temp
-                res[k][-2] = temp
-                res[k][-3] = -temp
-                res[k][-1] = -temp
-            return res
-
-        constraint = NonlinearConstraint(cons_f, 0, 0, jac=cons_g, hess='cs')
-
-    elif model_name == "SIMPJAC":
-
-        hid=np.array(mvec+mvec)
-        lb = 1 - (1.5)**(1/31)*(1-hid)
-        lb_nonnegative = np.array([ max(i,0) for i in lb])
-        bounds = Bounds(np.concatenate((lb_nonnegative, np.array([0]*4)), axis=None),
-                        np.array([MAX_X]*(2*n) + [branch1.edge_length, MAX_X, branch2.edge_length, MAX_X]))
-
-
-        def cons_f(x):
-            return [2*((1-x[k])**31 + (1-x[k+n])**31 - (1 - (x[k]+x[k+n]+d)/2)**31)
-                    - (1-mvec[k])**31*(3-(1-d)**31) for k in range(n)]
-
-        def cons_g(x):
-            res = [[0]*(2*n+4) for k in range(n)]
-            for k in range(n):
-                res[k][k]   = -2*31*(1-x[k])**30 + 2*31/2*(1 - (x[k]+x[k+n]+d)/2)**30
-                res[k][k+n] = -2*31*(1-x[k+n])**30 + 2*31/2*(1 - (x[k]+x[k+n]+d)/2)**30
-            return res
-
-        def cons_h_v(x,v):
-            res = [[0] * (2 * n + 4) for k in range(2*n+4)]
-            for k in range(n):
-                res[k][k] = v[k] * (2*31*30*(1-x[k])**29 - 2*31/2*30/2*(1 - (x[k]+x[k+n]+d)/2)**29)
-                res[k+n][k+n] = v[k] * (2*31*30*(1-x[k+n])**29 - 2*31/2*30/2*(1 - (x[k]+x[k+n]+d)/2)**29)
-                res[k][k + n] = res[k+n][k] = v[k] * (- 2*31/2*30/2*(1 - (x[k]+x[k+n]+d)/2)**29)
-            return res
-
-        constraint = NonlinearConstraint(cons_f, 0, 0, jac=cons_g, hess=cons_h_v)
-    else: #linear model
-        bounds = Bounds(np.array([0]*(2*n+4)),np.array([MAX_X]*(2*n) + [branch1.edge_length, MAX_X, branch2.edge_length, MAX_X]))
-
-        # constraints depend on model too
-        cons_mtr = [[0.0] * (2 * n + 4) for i in range(n)]
-        for i in range(n):
-            cons_mtr[i][i] = 0.5
-            cons_mtr[i][i + n] = 0.5
-        constraint = LinearConstraint(cons_mtr, mvec, mvec)
+    lb = np.array([math.exp(-k*MAX_X)]*(2*n))
+    lb=np.concatenate((lb, np.array([0] * 4)), axis=None)
+    ub=np.array([1]*(2*n) + [branch1.edge_length, MAX_X, branch2.edge_length, MAX_X])
+    bounds = Bounds(lb,ub)
 
 
     if method_name == "FM":
@@ -158,7 +76,6 @@ def optimize_for_two(branch1, branch2, tree, obs_dist, model_name, method_name,m
         h = FM.h
         h_p = FM.h_p
         result = minimize(fun=f, method="trust-constr", x0=x0, bounds=bounds, args=(branch1, branch2),
-                          constraints=[constraint],
                           options={'disp': True, 'verbose': 1, 'maxiter': maxIter}, jac=g, hessp='3-point')
     else:
         f = OLS.f
@@ -167,9 +84,15 @@ def optimize_for_two(branch1, branch2, tree, obs_dist, model_name, method_name,m
         h_p = OLS.h_p
 
         try:
-            result = minimize(fun=f, method="trust-constr", x0=x0, bounds=bounds, args=(branch1, branch2), constraints=[constraint],
-                      options={'disp': True, 'verbose': 1, 'maxiter': maxIter} , jac=g, hess=h )
+            result = minimize(fun=f, method="trust-constr", x0=x0,  args=(branch1, branch2, alpha, k, d, mvec),
+                      options={'disp': True, 'verbose': 1, 'maxiter': maxIter} , jac=g,
+                              constraints=[LinearConstraint(A=np.eye(2*n+4), lb=lb, ub=ub)], hess='3-point' )
         except Exception as e:
+            print("optimization failed")
+            import pdb; pdb.set_trace()
             return (None, branch1, branch2)
-    #print(result.fun , branch1.edge_index, branch2.edge_index)
+    print(result.fun , branch1.edge_index, branch2.edge_index)
+    # for i in range(2*n):
+    #     print(-1/k*math.log(result.x[i]),)
+    # print("")
     return (result, branch1, branch2)
