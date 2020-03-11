@@ -24,15 +24,19 @@ def optimize_for_two(branch1, branch2, tree, obs_containment, model_name, method
 
     def init_zero_obj():
         x0=np.array(mvec+mvec+[MIN_X,MIN_X,MIN_X,MIN_X])
-        for k, v in branch1.Rd.items():
-            x0[k] = v + branch1.edge_length
-        for k, v in branch1.Sd.items():
-            x0[k] = v
-        for k, v in branch2.Rd.items():
-            x0[k + n] = v + branch2.edge_length
-        for k, v in branch2.Sd.items():
-            x0[k + n] = v
-            return x0
+        for key, v in branch1.Rd.items():
+            x0[key] = v + branch1.edge_length
+        for key, v in branch1.Sd.items():
+            x0[key] = v
+        for key, v in branch2.Rd.items():
+            x0[key + n] = v + branch2.edge_length
+        for key, v in branch2.Sd.items():
+            x0[key + n] = v
+        for i in range(n):
+            x0[i] = math.exp(-k*x0[i])
+            x0[i+n] = math.exp(-k*x0[i+n])
+
+        return x0
 
     def init_zero_constr_viol():
         nmvec = 1- (1-np.array(mvec))*((3-(1-d)**31)/2)**(1/31)
@@ -59,9 +63,9 @@ def optimize_for_two(branch1, branch2, tree, obs_containment, model_name, method
     def init_lazy():
         return np.array(mvec+mvec+[MIN_X,MIN_X,MIN_X,MIN_X])
 
-    #x0=init_zero_obj()
+    x0=init_zero_obj()
     #x0=init_zero_constr_viol()
-    x0=init_lazy()
+    #x0=init_lazy()
 
 
     lb = np.array([math.exp(-k*MAX_X)]*(2*n))
@@ -92,7 +96,7 @@ def optimize_for_two(branch1, branch2, tree, obs_containment, model_name, method
             import pdb; pdb.set_trace()
             return (None, branch1, branch2)
     print(result.fun , branch1.edge_index, branch2.edge_index)
-    # for i in range(2*n):
-    #     print(-1/k*math.log(result.x[i]),)
-    # print("")
+    for i in range(2*n):
+        print(-1/k*math.log(result.x[i]),)
+    print("")
     return (result, branch1, branch2)

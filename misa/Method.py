@@ -59,8 +59,10 @@ class OLS(Method):
             for key, v in branch1.Sd.items():
                 acc += (1-alpha)/(3-xABhat)**2*((2*x[key]+2*x[key+n]-2*math.sqrt(x[key]*x[key+n]*xABhat)-(3-xABhat)*convec[key])**2)
                 #print((1-alpha)/(3-xABhat)**2*((2*x[key]+2*x[key+n]-2*math.sqrt(x[key]*x[key+n]*xABhat)-(3-xABhat)*convec[key])**1))
+
+
         except:
-            return 100
+            return 1000
 
         return acc
 
@@ -79,23 +81,23 @@ class OLS(Method):
 
         for key, v in branch1.Rd.items():
             res[key] += 2 * alpha/2*(-1/k*math.log(x[key]) - (v + branch1.edge_length - x1 + x2))*(-1)/k/x[key]
-            res[-4] += 2 * (-1/k*math.log(x[key]) - (v + branch1.edge_length - x1 + x2))
-            res[-3] += - 2 * (-1/k*math.log(x[key]) - (v + branch1.edge_length - x1 + x2))
+            res[-4] += 2 * alpha/2* (-1/k*math.log(x[key]) - (v + branch1.edge_length - x1 + x2))
+            res[-3] += - 2 * alpha/2* (-1/k*math.log(x[key]) - (v + branch1.edge_length - x1 + x2))
 
         for key, v in branch1.Sd.items():
             res[key] += 2 * alpha/2*(-1/k*math.log(x[key]) - (v + x1 + x2))*(-1)/k/x[key]
-            res[-4] += - 2 * (-1/k*math.log(x[key]) - (v + x1 + x2))
-            res[-3] += - 2 * (-1/k*math.log(x[key]) - (v + x1 + x2))
+            res[-4] += - 2 * alpha/2* (-1/k*math.log(x[key]) - (v + x1 + x2))
+            res[-3] += - 2 * alpha/2* (-1/k*math.log(x[key]) - (v + x1 + x2))
 
         for key, v in branch2.Rd.items():
             res[key + n] += 2 * alpha/2*(-1/k*math.log(x[key+n]) - (v + branch2.edge_length - x3 + x4))*(-1)/k/x[key+n]
-            res[-2] += 2 * (-1/k*math.log(x[key+n]) - (v + branch2.edge_length - x3 + x4))
-            res[-1] += - 2 * (-1/k*math.log(x[key+n]) - (v + branch2.edge_length - x3 + x4))
+            res[-2] += 2 * alpha/2* (-1/k*math.log(x[key+n]) - (v + branch2.edge_length - x3 + x4))
+            res[-1] += - 2 * alpha/2* (-1/k*math.log(x[key+n]) - (v + branch2.edge_length - x3 + x4))
 
         for key, v in branch2.Sd.items():
             res[key + n] += 2 * alpha/2*(-1/k*math.log(x[key+n]) - (v + x3 + x4))*(-1)/k/x[key+n]
-            res[-2] += - 2 * (-1/k*math.log(x[key+n]) - (v + x3 + x4))
-            res[-1] += - 2 * (-1/k*math.log(x[key+n]) - (v + x3 + x4))
+            res[-2] += - 2 * alpha/2* (-1/k*math.log(x[key+n]) - (v + x3 + x4))
+            res[-1] += - 2 * alpha/2* (-1/k*math.log(x[key+n]) - (v + x3 + x4))
 
         for key, v in branch1.Rd.items():
             res[key] += 2*(1-alpha)/(3-xABhat)**2*(2*x[key]+2*x[key+n]-2*math.sqrt(x[key]*x[key+n]*xABhat)-(3-xABhat)*convec[key])*(2-x[key+n]*xABhat/math.sqrt(x[key]*x[key+n]*xABhat))

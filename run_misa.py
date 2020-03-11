@@ -4,7 +4,7 @@ import sys
 from optparse import OptionParser
 
 import treeswift as ts
-from misa.util import index_edges
+from misa.util import index_edges,mrca_matrix
 from misa.estimate_d3 import estimate_d3
 
 from misa.Core import Core
@@ -76,17 +76,21 @@ if __name__ == "__main__":
     # each leaf has an 'id' and each node has 'edge_index'. don't confuse them
     ind_key_obs = {n.id:(2*obs_dist[n.label])/(obs_dist[n.label]+1) for n in core.tree.traverse_postorder(internal=False)}
 
+    mrca = mrca_matrix(tree)
+    # print(mrca.keys())
 
     from misa.Method import OLS
     import math
-    meta = ts.read_tree_newick("yeast/VIN7/meta_backbone.tree")
-
+    # meta = ts.read_tree_newick("yeast/VIN7/meta_backbone.tree")
+    #
     # dm = meta.distance_matrix(leaf_labels=True)
     #
     # s1 = "Saccharomyces_cerevisiae"
     # s2 = "Saccharomyces_kudriavzevii"
     #
     # a_vec = {n.id:dm[s1][n.label] for n in core.tree.traverse_postorder(internal=False)}
+    # [print([n.label]) for n in core.tree.traverse_postorder(internal=False)]
+    #
     # b_vec = {n.id:dm[s2][n.label] for n in core.tree.traverse_postorder(internal=False)}
     #
     # print(a_vec)
@@ -99,8 +103,8 @@ if __name__ == "__main__":
     # x_test[-3]=0.05683918
     # x_test[-2]=0.01680891
     # x_test[-1]=0.07946303
-
-    #print(x_test)
+    #
+    # print(x_test)
 
     # orig_err = 0
     # for k in range(12):
@@ -119,7 +123,10 @@ if __name__ == "__main__":
             for j in core.tree.traverse_postorder():
                 if j == core.tree.root:
                     continue
-                if i.edge_index in [0] and  j.edge_index in [4,7]:
+                #if i.edge_index in [0] and  j.edge_index in [4,7]:
+                #if i.edge_index <=  j.edge_index:
+                if i != j and mrca[i][j] not in [i,j]:
+                #    print(i.edge_index,j.edge_index)
                 #if i.label and k.label and i.label == "Drosophila_pseudoobscura" and k.label == "Drosophila_sechellia":
                 #if i.label and k.label and i.label == "Drosophila_persimilis" and k.label == "Drosophila_mojavensis":
                 #if i.label and k.label and i.label == "Drosophila_persimilis" and k.label == "Drosophila_persimilis":
@@ -138,6 +145,7 @@ if __name__ == "__main__":
                     yield (i, j, tree, ind_key_obs, model_name, method_name,num_iterations,kmer_size, alpha)
     all_edge_pairs = prepare_edge_pairs()
 
+    #print(len(all_edge_pairs))
     pool = mp.Pool(num_thread)
     results = pool.starmap(optimize_for_two, all_edge_pairs)
     results_no_error = list(filter(lambda x: x[0] != None, results))
