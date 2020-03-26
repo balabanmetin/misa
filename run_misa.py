@@ -99,7 +99,8 @@ if __name__ == "__main__":
     #
     # print("ORIG ERR: ", orig_err)
 
-
+    with open("ploc.txt") as f:
+        x = list(map(lambda x: int(x.strip()), f.readlines()))
 
     def prepare_edge_pairs():
         for i in core.tree.traverse_postorder():
@@ -108,7 +109,7 @@ if __name__ == "__main__":
             for k in core.tree.traverse_postorder():
                 if k == core.tree.root:
                     continue
-                if i.edge_index <= k.edge_index:
+                if i.edge_index in [x[0]] and k.edge_index in [x[1]]:
                 #if i.label and k.label and i.label == "Drosophila_pseudoobscura" and k.label == "Drosophila_sechellia":
                 #if i.label and k.label and i.label == "Drosophila_persimilis" and k.label == "Drosophila_mojavensis":
                 #if i.label and k.label and i.label == "Drosophila_persimilis" and k.label == "Drosophila_persimilis":

@@ -168,7 +168,7 @@ def optimize_for_two(branch1, branch2, tree, obs_dist, model_name, method_name,m
 
         try:
             result = minimize(fun=f, method="trust-constr", x0=x0, bounds=bounds, args=(branch1, branch2), constraints=[constraint],
-                      options={'disp': True, 'verbose': 1, 'maxiter': maxIter} , jac=g, hess=h )
+                      options={'disp': True, 'verbose': 2, 'maxiter': maxIter} , jac=g, hess=h )
         except Exception as e:
             return (None, branch1, branch2)
     #print(result.fun , branch1.edge_index, branch2.edge_index)
