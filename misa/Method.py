@@ -28,9 +28,10 @@ class OLS(Method):
     def f(x, *args):
         branch1 = args[0]
         branch2 = args[1]
-        x1, x2, x3, x4 = x[-4:]
+        w = args[2]
+        xAB, x1, x2, x3, x4 = x[-5:]
         acc = 0
-        n = int((len(x) - 4) / 2)
+        n = int((len(x) - 5) / 2)
         for k, v in branch1.Rd.items():
             acc += (x[k] - (v + branch1.edge_length - x1 + x2)) ** 2
         for k, v in branch1.Sd.items():
@@ -41,15 +42,19 @@ class OLS(Method):
         for k, v in branch2.Sd.items():
             acc += (x[k + n] - (v + x3 + x4)) ** 2
 
+        # w is distance between distal tips of branch1 and branch2
+        acc += (xAB - (w - x1 + x2 - x3 + x4))**2
         return acc
 
     @staticmethod
     def g(x, *args):
         branch1 = args[0]
         branch2 = args[1]
+        w = args[2]
         x1, x2, x3, x4 = x[-4:]
+        xAB = x[-5]
         res = len(x) * [0]
-        n = int((len(x) - 4) / 2)
+        n = int((len(x) - 5) / 2)
 
         for k, v in branch1.Rd.items():
             res[k] += 2 * (x[k] - (v + branch1.edge_length - x1 + x2))
@@ -71,14 +76,20 @@ class OLS(Method):
             res[-2] += - 2 * (x[k + n] - (v + x3 + x4))
             res[-1] += - 2 * (x[k + n] - (v + x3 + x4))
 
+        res[-5] = 2 *(-w+x1-x2+x3-x4+xAB)
+        res[-4] += 2 *(-w+x1-x2+x3-x4+xAB)
+        res[-2] += 2 * (-w + x1 - x2 + x3 - x4 + xAB)
+        res[-3] += -2 * (-w + x1 - x2 + x3 - x4 + xAB)
+        res[-1] += -2 * (-w + x1 - x2 + x3 - x4 + xAB)
         return res
 
     @staticmethod
     def h(x, *args):
         branch1 = args[0]
         branch2 = args[1]
-        n = int((len(x) - 4) / 2)
+        n = int((len(x) - 5) / 2)
         H = np.diag([2] * len(x), 0)
+
         H[-4][-4] = H[-3][-3] = H[-2][-2] = H[-1][-1]= 2 * n
         H[-4][-3] = H[-3][-4] = -len(branch1.Rd)*2 + len(branch1.Sd)*2
         H[-1][-2] = H[-2][-1] = -len(branch2.Rd)*2 + len(branch2.Sd)*2
@@ -97,6 +108,10 @@ class OLS(Method):
 
         H[0:n, -3] = H[n:2*n, -1] = H[-1, n:2*n] = H[-3, 0:n] = -2
 
+        last_term_hessian= [[0, 2, -2, 2, -2], [2, 2, -2, 2, -2], [-2, -2, 2, -2, 2], [2, 2, -2, 2, -2], [-2, -2, 2, -2, 2]]
+        for i in range(5):
+            for j in range(5):
+                H[2*n+i][2*n+j] += last_term_hessian[i][j]
         return H
 
     @staticmethod

@@ -16,11 +16,14 @@ def optimize_for_two(branch1, branch2, tree, obs_dist, model_name, method_name,m
         dlist += [tree.distance_between(branch1.parent, branch2)]
     if branch2.parent != tree.root:
         dlist += [tree.distance_between(branch1, branch2.parent)]
-    d = max(dlist)
+    if branch1.parent!= tree.root and branch2.parent != tree.root:
+        dlist += [tree.distance_between(branch1.parent, branch2.parent)]
+    w = max(dlist)
+    dmin = min(dlist)
 
     mvec = [obs_dist[k] for k in sorted(obs_dist)]
     n=len(mvec)
-    obs_min = 1-(2/(3-(1-d)**ks))**(1.0/ks)
+    obs_min = 1-(2/(3-(1-dmin)**ks))**(1.0/ks)
     for i in range(n):
         mvec[i]=max(mvec[i],obs_min+0.001)
 
@@ -36,11 +39,12 @@ def optimize_for_two(branch1, branch2, tree, obs_dist, model_name, method_name,m
             x0[k + n] = v
             return x0
 
+    # TODO nmvec has negative terms
     def init_zero_constr_viol():
-        nmvec = 1- (1-np.array(mvec))*((3-(1-d)**ks)/2)**(1/ks)
+        nmvec = 1- (1-np.array(mvec))*((3-(1-w)**ks)/2)**(1/ks)
         hypo1=[0]*n
         hypo2=[0]*n
-        res = [0]*(2*n+4)
+        res = [0]*(2*n+5)
         for k, v in branch1.Rd.items():
             hypo1[k] = v + branch1.edge_length
         for k, v in branch1.Sd.items():
@@ -52,10 +56,11 @@ def optimize_for_two(branch1, branch2, tree, obs_dist, model_name, method_name,m
         for i in range(n):
             if hypo1[i] <= hypo2[i]:
                 res[i] = nmvec[i]
-                res[i+n] = nmvec[i]+d
+                res[i+n] = nmvec[i]+ w
             else:
                 res[i+n] = nmvec[i]
-                res[i] = nmvec[i] + d
+                res[i] = nmvec[i] + w
+        res[-5] = w
         return res
 
     def init_lazy():
@@ -117,27 +122,29 @@ def optimize_for_two(branch1, branch2, tree, obs_dist, model_name, method_name,m
         hid=np.array(mvec+mvec)
         lb = 1 - (1.5)**(1/ks)*(1-hid)
         lb_nonnegative = np.array([ max(i,0) for i in lb])
-        bounds = Bounds(np.concatenate((lb_nonnegative, np.array([0]*4)), axis=None),
-                        np.array([MAX_X]*(2*n) + [branch1.edge_length, MAX_X, branch2.edge_length, MAX_X]))
+        bounds = Bounds(np.concatenate((lb_nonnegative, np.array([dmin]+[0]*4)), axis=None),
+                        np.array([MAX_X]*(2*n) + [w+2*MAX_X, branch1.edge_length, MAX_X, branch2.edge_length, MAX_X]))
 
 
         def cons_f(x):
-            return [2*((1-x[k])**ks + (1-x[k+n])**ks - (1 - (x[k]+x[k+n]+d)/2)**ks)
-                    - (1-mvec[k])**ks*(3-(1-d)**ks) for k in range(n)]
+            return [2*((1-x[k])**ks + (1-x[k+n])**ks - (1 - (x[k]+x[k+n]+x[-5])/2)**ks)
+                    - (1-mvec[k])**ks*(3-(1-x[-5])**ks) for k in range(n)]
 
         def cons_g(x):
-            res = [[0]*(2*n+4) for k in range(n)]
+            res = [[0]*(2*n+5) for k in range(n)]
             for k in range(n):
-                res[k][k]   = -2*ks*(1-x[k])**(ks-1) + 2*ks/2*(1 - (x[k]+x[k+n]+d)/2)**(ks-1)
-                res[k][k+n] = -2*ks*(1-x[k+n])**(ks-1) + 2*ks/2*(1 - (x[k]+x[k+n]+d)/2)**(ks-1)
+                res[k][k]   = -2*ks*(1-x[k])**(ks-1) + 2*ks/2*(1 - (x[k]+x[k+n]+x[-5])/2)**(ks-1)
+                res[k][k+n] = -2*ks*(1-x[k+n])**(ks-1) + 2*ks/2*(1 - (x[k]+x[k+n]+x[-5])/2)**(ks-1)
+                res[k][-5]  = ks * (-(1 - mvec[k]) ** ks * (1 - x[-5])**(-1 + ks) + (1 - 1/2 *(x[k] + x[-5] + x[k+n]))**(-1 + ks))
             return res
 
         def cons_h_v(x,v):
-            res = [[0] * (2 * n + 4) for k in range(2*n+4)]
+            res = [[0] * (2 * n + 5) for k in range(2*n+5)]
             for k in range(n):
-                res[k][k] = v[k] * (2*ks*(ks-1)*(1-x[k])**(ks-2) - 2*ks/2*(ks-1)/2*(1 - (x[k]+x[k+n]+d)/2)**(ks-2))
-                res[k+n][k+n] = v[k] * (2*ks*(ks-1)*(1-x[k+n])**(ks-2) - 2*ks/2*(ks-1)/2*(1 - (x[k]+x[k+n]+d)/2)**(ks-2))
-                res[k][k + n] = res[k+n][k] = v[k] * (- 2*ks/2*(ks-1)/2*(1 - (x[k]+x[k+n]+d)/2)**(ks-2))
+                res[k][k] = v[k] * (2*ks*(ks-1)*(1-x[k])**(ks-2) - 2*ks/2*(ks-1)/2*(1 - (x[k]+x[k+n]+x[-5])/2)**(ks-2))
+                res[k+n][k+n] = v[k] * (2*ks*(ks-1)*(1-x[k+n])**(ks-2) - 2*ks/2*(ks-1)/2*(1 - (x[k]+x[k+n]+x[-5])/2)**(ks-2))
+                res[-5][-5] = v[k] * (ks *(-1 + ks)* ((1 - mvec[k]) ** ks * (1 - x[-5])**(-2 + ks) - 1/2*(1 - 1/2 *(x[k] + x[-5] + x[k+n]))**(-2 + ks)))
+                res[k][k + n] = res[k+n][k] = res[k][-5] = res[-5][k] = res[k+n][-5] = res[-5][k+n] = v[k] * (- 2*ks/2*(ks-1)/2*(1 - (x[k]+x[k+n]+x[-5])/2)**(ks-2))
             return res
 
         constraint = NonlinearConstraint(cons_f, 0, 0, jac=cons_g, hess=cons_h_v)
@@ -157,7 +164,7 @@ def optimize_for_two(branch1, branch2, tree, obs_dist, model_name, method_name,m
         g = FM.g
         h = FM.h
         h_p = FM.h_p
-        result = minimize(fun=f, method="trust-constr", x0=x0, bounds=bounds, args=(branch1, branch2),
+        result = minimize(fun=f, method="trust-constr", x0=x0, bounds=bounds, args=(branch1, branch2, w),
                           constraints=[constraint],
                           options={'disp': True, 'verbose': 1, 'maxiter': maxIter}, jac=g, hessp='3-point')
     else:
@@ -167,9 +174,10 @@ def optimize_for_two(branch1, branch2, tree, obs_dist, model_name, method_name,m
         h_p = OLS.h_p
 
         try:
-            result = minimize(fun=f, method="trust-constr", x0=x0, bounds=bounds, args=(branch1, branch2), constraints=[constraint],
+            result = minimize(fun=f, method="trust-constr", x0=x0, bounds=bounds, args=(branch1, branch2, w), constraints=[constraint],
                       options={'disp': True, 'verbose': 1, 'maxiter': maxIter} , jac=g, hess=h )
         except Exception as e:
+            e.with_traceback()
             return (None, branch1, branch2)
     #print(result.fun , branch1.edge_index, branch2.edge_index)
     return (result, branch1, branch2)

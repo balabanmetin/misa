@@ -32,6 +32,8 @@ class Core:
     #                 and not node.parent.valid:
     #             node.valid = False
 
+
+    # nodes not away from root
     def create_R_table(self):
         for node in self.tree.traverse_preorder():
             if node == self.tree.root:
@@ -44,6 +46,7 @@ class Core:
                 node.Rd.update({k: v + node.parent.edge_length for k, v in node.parent.Rd.items()})
         return
 
+    # nodes away from root
     def create_S_table(self):
         for node in self.tree.traverse_postorder():
             if node.is_leaf():

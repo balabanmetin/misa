@@ -109,6 +109,8 @@ if __name__ == "__main__":
                 if k == core.tree.root:
                     continue
                 if i.edge_index <= k.edge_index:
+                #if i.edge_index in [8] and k.edge_index in [10]:
+
                 #if i.label and k.label and i.label == "Drosophila_pseudoobscura" and k.label == "Drosophila_sechellia":
                 #if i.label and k.label and i.label == "Drosophila_persimilis" and k.label == "Drosophila_mojavensis":
                 #if i.label and k.label and i.label == "Drosophila_persimilis" and k.label == "Drosophila_persimilis":
