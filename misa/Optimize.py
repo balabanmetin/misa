@@ -174,7 +174,7 @@ def optimize_for_two(branch1, branch2, tree, obs_dist, model_name, method_name,m
         h_p = OLS.h_p
 
         try:
-            result = minimize(fun=f, method="trust-constr", x0=x0, bounds=bounds, args=(branch1, branch2, w), constraints=[constraint],
+            result = minimize(fun=f, method="trust-constr", x0=x0, bounds=bounds, args=(branch1, branch2, w, np.array([1,1,-1,1,-1])), constraints=[constraint],
                       options={'disp': True, 'verbose': 1, 'maxiter': maxIter} , jac=g, hess=h )
         except Exception as e:
             e.with_traceback()
