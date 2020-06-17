@@ -8,18 +8,7 @@ MAX_X = 0.67
 
 
 
-def optimize_for_two(branch1, branch2, tree, obs_dist, model_name, method_name,maxIter,ks):
-
-
-    dlist=[tree.distance_between(branch1,branch2)]
-    if branch1.parent!= tree.root:
-        dlist += [tree.distance_between(branch1.parent, branch2)]
-    if branch2.parent != tree.root:
-        dlist += [tree.distance_between(branch1, branch2.parent)]
-    if branch1.parent!= tree.root and branch2.parent != tree.root:
-        dlist += [tree.distance_between(branch1.parent, branch2.parent)]
-    w = max(dlist)
-    dmin = min(dlist)
+def optimize_for_two(branch1, branch2, tree, obs_dist, model_name, method_name,maxIter,ks,w,dmin,signs):
 
     mvec = [obs_dist[k] for k in sorted(obs_dist)]
     n=len(mvec)
@@ -174,7 +163,7 @@ def optimize_for_two(branch1, branch2, tree, obs_dist, model_name, method_name,m
         h_p = OLS.h_p
 
         try:
-            result = minimize(fun=f, method="trust-constr", x0=x0, bounds=bounds, args=(branch1, branch2, w, np.array([1,1,-1,1,-1])), constraints=[constraint],
+            result = minimize(fun=f, method="trust-constr", x0=x0, bounds=bounds, args=(branch1, branch2, w, signs), constraints=[constraint],
                       options={'disp': True, 'verbose': 1, 'maxiter': maxIter} , jac=g, hess=h )
         except Exception as e:
             e.with_traceback()

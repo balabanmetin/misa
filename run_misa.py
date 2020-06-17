@@ -2,6 +2,7 @@
 import json
 import sys
 from optparse import OptionParser
+import numpy as np
 
 import treeswift as ts
 from misa.util import index_edges
@@ -109,13 +110,28 @@ if __name__ == "__main__":
                 if k == core.tree.root:
                     continue
                 if i.edge_index <= k.edge_index:
+                    dlist = [core.tree.distance_between(i, k)]
+                    if i.parent != core.tree.root:
+                        dlist += [core.tree.distance_between(i.parent, k)]
+                    if k.parent != core.tree.root:
+                        dlist += [core.tree.distance_between(i, k.parent)]
+                    if i.parent != core.tree.root and k.parent != core.tree.root:
+                        dlist += [core.tree.distance_between(i.parent, k.parent)]
+                    w = max(dlist)
+                    dmin = min(dlist)
+                    signs=np.array([1,1,-1,1,-1])
+                    if i.edge_index in k.desc:
+                        signs[-2]=-1
+                    elif k.edge_index in i.desc:
+                        signs[-4]=-1
                 #if i.edge_index in [8] and k.edge_index in [10]:
 
                 #if i.label and k.label and i.label == "Drosophila_pseudoobscura" and k.label == "Drosophila_sechellia":
                 #if i.label and k.label and i.label == "Drosophila_persimilis" and k.label == "Drosophila_mojavensis":
                 #if i.label and k.label and i.label == "Drosophila_persimilis" and k.label == "Drosophila_persimilis":
 
-                    yield (i, k, tree, ind_key_obs, model_name, method_name,num_iterations,kmer_size)
+                    yield (i, k, tree, ind_key_obs, model_name, method_name,num_iterations,kmer_size,w,dmin,signs)
+
     all_edge_pairs = prepare_edge_pairs()
 
     pool = mp.Pool(num_thread)
