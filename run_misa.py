@@ -23,12 +23,10 @@ if __name__ == "__main__":
     parser.add_option("-o", "--output", dest="output_fp",
                       help="path for the output jplace file",
                       metavar="FILE")
-    parser.add_option("-l", "--model", dest="model_name", default="HAR",
-                      help="name of the model (LIN, HAR, JAC)", metavar="MODEL")
-    parser.add_option("-m", "--method", dest="method_name", default="FM",
-                      help="name of the weighted least squares method (OLS, FM)", metavar="METHOD")
-    # parser.add_option("-p", "--protein", dest="protein_seqs", action='store_true',
-    #                  help="input sequences are protein sequences")
+    parser.add_option("-l", "--model", dest="model_name", default="SIMPJAC",
+                      help="name of the model (SIMPJAC, HAR, JAC). NOTE: only SIMPJAC is actively maintained.", metavar="MODEL")
+    parser.add_option("-m", "--method", dest="method_name", default="OLS",
+                      help="name of the weighted least squares method (OLS, FM). NOTE: only OLS is actively maintained.", metavar="METHOD")    
     parser.add_option("-j", "--jc", dest="jc_correct", action='store_true', default=False,
                      help="choose if you want to apply Jukes-Cantor on input")
     parser.add_option("-T", "--threads", dest="num_thread", default="0",
