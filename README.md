@@ -43,19 +43,11 @@ Input reference (backbone) tree must be in newick format. MISA can perform place
 
 
 #### Input a distance matrix
-The format for distance matrix is a tab delimited csv file with column and row headers. Rows should represent query sequences and columns should represent reference sequences. You can find an example distance matrix for ten query sequences under [data/dist.mat](data/dist.mat). 
-After cloning and navigating to this repository (cd), you can run MISA on the example distance matrix by running the following command:
+The format for distance matrix is a tab delimited csv file with column and row headers. Rows should represent query sequences and columns should represent reference sequences. You can find an example reference dataset with backbone phylogenetic tree under [data/backbone.nwk](data/backbone.nwk) and distance matrix for one query mixed sequence under [data/dist.mat](data/dist.mat).
+After cloning this repository, you can run MISA on the example distance matrix and backbone tree by running the following command:
 
 `run_misa.py -d <path_to_this_repo>/data/dist.mat -t <path_to_this_repo>/data/backbone.nwk`
 
-
-If you want to install MISA from the github repository, MISA has the following dependencies which can be retrieved from `pip`:
-
-1. `treeswift`
-2. `numpy`
-3. `scipy`
-
-To install a dependency, for example `scipy`, run `pip3 install scipy`.
 
 #### Output
 Output is a jplace file containing placement results for all queries. For more information about jplace files, please refer to Matsen et. al. (2012) [https://doi.org/10.1371/journal.pone.0031009](https://doi.org/10.1371/journal.pone.0031009). The output file can be specified using `-o` command. When output file is not specified, the result will be printed to the standard output.
@@ -69,3 +61,19 @@ Backbone tree provided to MISA has to have its branch lengths estimated using a 
 Then perform placement on the new tree:
 
 `run_misa.py -d dist.mat -t minimum_evo_backbone.nwk`
+
+------------------------------------
+(Alternative) Installation from github
+------------------------------------
+
+If you want to install MISA from the github repository, MISA has the following dependencies which can be retrieved from `pip`:
+
+1. `treeswift`
+2. `numpy`
+3. `scipy`
+
+To install a dependency, for example `scipy`, run `pip3 install scipy`.
+
+Clone the repository and change directory:
+
+`git clone https://github.com/balabanmetin/misa.git && cd misa`
