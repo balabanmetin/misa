@@ -1,4 +1,4 @@
   556  python setup.py sdist
   558  source activate three
   559  twine upload dist/misa-1.0.0.tar.gz 
-  560  twine upload --repository-url https://upload.pypi.org/legacy/dist/misa-1.0.0.tar.gz 
+  560  twine upload --repository-url https://upload.pypi.org/legacy/ dist/misa-1.0.0.tar.gz 

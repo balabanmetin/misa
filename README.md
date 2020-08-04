@@ -10,7 +10,7 @@ MISA stands for `MIxed Sample Analysis tool` and addresses the problem of phylog
 Publication
 ------------------------------------
 
-* Balaban, Metin, and Siavash Mirarab. “Phylogenetic Double Placement of Mixed Samples.” Bioinformatics, in press, (2020).
+* Balaban, Metin, and Siavash Mirarab. “Phylogenetic double placement of mixed samples.” Bioinformatics (Oxford, England) vol. 36,Supplement_1 (2020): i335-i343. [https://doi.org/10.1093/bioinformatics/btaa489](https://doi.org/10.1093/bioinformatics/btaa489)
 
 
 ------------------------------------
@@ -22,9 +22,9 @@ Requirements
 Installation on Linux, Mac OSX, or Windows
 ------------------------------------
 
-Clone the repository and change directory:
+Install MISA using the following command in the command-line:
 
-`git clone https://github.com/balabanmetin/misa.git && cd misa`
+`pip install misa`
 
 
 ---------------------------------------------
@@ -44,11 +44,12 @@ Input reference (backbone) tree must be in newick format. MISA can perform place
 
 #### Input a distance matrix
 The format for distance matrix is a tab delimited csv file with column and row headers. Rows should represent query sequences and columns should represent reference sequences. You can find an example distance matrix for ten query sequences under [data/dist.mat](data/dist.mat). 
-You can run MISA on the example distance matrix by running the following command:
+After cloning and navigating to this repository (cd), you can run MISA on the example distance matrix by running the following command:
 
-`run_misa.py -d data/dist.mat -t data/backbone.nwk`
+`run_misa.py -d <path_to_this_repo>/data/dist.mat -t <path_to_this_repo>/data/backbone.nwk`
 
-MISA has the following dependencies which can be retrieved from `pip`:
+
+If you want to install MISA from the github repository, MISA has the following dependencies which can be retrieved from `pip`:
 
 1. `treeswift`
 2. `numpy`
