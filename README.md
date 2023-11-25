@@ -77,3 +77,12 @@ To install a dependency, for example `scipy`, run `pip3 install scipy`.
 Clone the repository and change directory:
 
 `git clone https://github.com/balabanmetin/misa.git && cd misa`
+
+
+------------------------------------
+Data resources used in the publication
+------------------------------------
+
+The data used in our publication is available on Dryad [https://doi.org/doi:10.6076/D1QW25](https://doi.org/doi:10.6076/D1QW25)
+
+
