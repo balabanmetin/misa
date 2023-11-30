@@ -83,6 +83,6 @@ Clone the repository and change directory:
 Data resources used in the publication
 ------------------------------------
 
-The data used in our publication is available on Dryad [https://doi.org/doi:10.6076/D1QW25](https://doi.org/doi:10.6076/D1QW25)
+The data used in our publication is available on GitHub [https://github.com/balabanmetin/misa-data](https://github.com/balabanmetin/misa-data)
 
 
